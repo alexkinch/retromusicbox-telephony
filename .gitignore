@@ -1,0 +1,13 @@
+.env
+*.log
+.DS_Store
+
+# Claude Code session state (per-machine permission grants, run history, etc).
+.claude/
+
+# User-supplied custom prompts (recordings) live in sounds/ but should not be
+# committed to the repo - they're per-deployment. Recursive so the digit clips
+# under sounds/digits/ are also excluded.
+sounds/**/*.wav
+sounds/**/*.mp3
+!sounds/README.md

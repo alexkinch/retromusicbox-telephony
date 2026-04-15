@@ -1,0 +1,16 @@
+<configuration name="switch.conf" description="Core FreeSWITCH config">
+  <settings>
+    <!-- Console log level: debug | info | notice | warning | err -->
+    <param name="loglevel" value="info"/>
+
+    <!-- RTP port range. The compose file maps 16384-16484 (100 ports =
+         50 simultaneous calls); widen both ends together for production. -->
+    <param name="rtp-start-port" value="16384"/>
+    <param name="rtp-end-port"   value="16484"/>
+
+    <!-- Sane defaults for a single-purpose IVR -->
+    <param name="max-sessions"     value="100"/>
+    <param name="sessions-per-second" value="30"/>
+    <param name="dialplan-timestamps" value="false"/>
+  </settings>
+</configuration>

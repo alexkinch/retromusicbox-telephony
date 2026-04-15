@@ -1,0 +1,14 @@
+<include>
+  <!--
+    Codec preference: stick to G.711 since every softphone speaks it and
+    it removes any transcoding cost. Add OPUS at the front later if you
+    want WebRTC clients.
+
+    The external SIP profile uses `rtp-ip="auto"` / `sip-ip="auto"` and
+    sofia advertises the primary interface in SDP. With `network_mode: host`
+    on Linux that's the host's real interface, which is what we want.
+  -->
+  <X-PRE-PROCESS cmd="exec-set" data="external_ip=printenv RMB_EXTERNAL_IP"/>
+  <X-PRE-PROCESS cmd="set" data="global_codec_prefs=PCMU,PCMA"/>
+  <X-PRE-PROCESS cmd="set" data="outbound_codec_prefs=PCMU,PCMA"/>
+</include>

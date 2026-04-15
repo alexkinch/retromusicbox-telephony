@@ -1,0 +1,29 @@
+services:
+  freeswitch:
+    build:
+      context: .
+      args:
+        SIGNALWIRE_TOKEN: ${SIGNALWIRE_TOKEN}
+    image: retromusicbox-telephony:latest
+    container_name: rmb-freeswitch
+    # Host networking. On Linux this attaches the container directly to the
+    # host's network namespace; on macOS via OrbStack, the container shares
+    # the OrbStack VM's network namespace and "any servers you run in the
+    # container will be accessible from Mac on localhost" per OrbStack's
+    # docs — provided the listener is reachable on the VM's loopback.
+    # Sofia is therefore configured (via RMB_EXTERNAL_IP=127.0.0.1) to bind
+    # on lo so OrbStack's localhost shim forwards Mac→container traffic.
+    network_mode: host
+    environment:
+      RMBD_URL: ${RMBD_URL:-http://localhost:8080}
+      RMBD_HTTP_TIMEOUT: "15"
+      RMB_MAX_RETRIES: "3"
+      # Address sofia binds and advertises in SDP. 127.0.0.1 makes sofia
+      # bind on the OrbStack VM's loopback interface, which is what
+      # OrbStack's localhost forwarder reaches when a Mac client dials
+      # localhost. For a real Linux deployment, set this to the host's
+      # routable IP (or remove and use sofia's auto detection).
+      RMB_EXTERNAL_IP: ${RMB_EXTERNAL_IP:-127.0.0.1}
+    volumes:
+      - ./sounds:/var/lib/freeswitch/sounds/retromusicbox/en:ro
+    restart: unless-stopped

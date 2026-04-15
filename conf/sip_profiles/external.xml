@@ -1,0 +1,50 @@
+<profile name="external">
+  <!--
+    Single SIP profile, listening on UDP/TCP 5080. Inbound calls land in the
+    `public` dialplan context, which routes everything straight to the
+    retromusicbox Lua handler. There's no register / digest auth — this
+    profile is for an IP-locked carrier trunk, a softphone on the LAN, or
+    local development. Don't expose it to the open internet without adding
+    ACLs in autoload_configs/acl.conf.xml first.
+  -->
+  <settings>
+    <param name="sip-port" value="5080"/>
+    <!--
+      `auto` means sofia binds to (and advertises in SDP) the primary
+      outbound interface. With `network_mode: host` on Linux that's the
+      host's real interface, which is exactly what we want. For NAT'd
+      deployments where SDP needs to advertise a different address than
+      the bind, override with `ext-rtp-ip` / `ext-sip-ip`.
+    -->
+    <param name="rtp-ip" value="$${external_ip}"/>
+    <param name="sip-ip" value="$${external_ip}"/>
+    <param name="ext-rtp-ip" value="$${external_ip}"/>
+    <param name="ext-sip-ip" value="$${external_ip}"/>
+
+    <param name="dialplan" value="XML"/>
+    <param name="context" value="public"/>
+
+    <param name="auth-calls" value="false"/>
+    <param name="accept-blind-auth" value="true"/>
+    <param name="accept-blind-reg" value="true"/>
+    <!--
+      No inbound ACL. The original vanilla `apply-inbound-acl="domains"`
+      rejects everything when no SIP domains are registered (which is our
+      case — this is an inbound-only IVR, not a registrar). For a
+      production deployment exposed to the open internet, replace this
+      with a real allow-list rule pointing at your carrier IPs. For local
+      dev / IP-locked trunks, leaving it off is correct.
+    -->
+    <!-- <param name="apply-inbound-acl" value="rmb_trusted"/> -->
+    <param name="inbound-bypass-media" value="false"/>
+
+    <param name="inbound-codec-prefs" value="$${global_codec_prefs}"/>
+    <param name="outbound-codec-prefs" value="$${outbound_codec_prefs}"/>
+    <param name="inbound-codec-negotiation" value="generous"/>
+
+    <param name="rtp-timer-name" value="soft"/>
+    <param name="hold-music" value="silence_stream://-1"/>
+    <param name="dtmf-duration" value="2000"/>
+    <param name="dtmf-type" value="rfc2833"/>
+  </settings>
+</profile>

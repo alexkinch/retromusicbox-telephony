@@ -1,0 +1,16 @@
+<include>
+  <!--
+    Public dialplan: any inbound call hitting the external SIP profile (5080)
+    is routed straight into the retromusicbox IVR Lua handler.
+    There is intentionally no other routing here - this is a single-purpose IVR.
+  -->
+  <context name="public">
+    <extension name="retromusicbox-inbound">
+      <condition field="destination_number" expression="^.*$">
+        <action application="set" data="hangup_after_bridge=true"/>
+        <action application="lua" data="/etc/freeswitch/scripts/retromusicbox.lua"/>
+        <action application="hangup"/>
+      </condition>
+    </extension>
+  </context>
+</include>

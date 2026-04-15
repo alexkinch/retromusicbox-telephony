@@ -1,0 +1,11 @@
+<configuration name="event_socket.conf" description="Event Socket / fs_cli">
+  <settings>
+    <!-- Bound to loopback inside the container; use `docker exec rmb-freeswitch
+         fs_cli` to reach it. Don't expose ESL externally — the password below
+         is a local-only sentinel. -->
+    <param name="nat-map" value="false"/>
+    <param name="listen-ip" value="127.0.0.1"/>
+    <param name="listen-port" value="8021"/>
+    <param name="password" value="ClueCon"/>
+  </settings>
+</configuration>

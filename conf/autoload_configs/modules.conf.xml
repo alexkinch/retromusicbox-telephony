@@ -1,0 +1,36 @@
+<configuration name="modules.conf" description="Modules">
+  <!--
+    Only the modules retromusicbox actually uses are loaded. Adding modules
+    here without a matching apt package in the Dockerfile will silently log
+    "Cannot find module" warnings on boot.
+  -->
+  <modules>
+    <!-- logging -->
+    <load module="mod_console"/>
+    <load module="mod_logfile"/>
+
+    <!-- core dialplan + apps -->
+    <load module="mod_commands"/>
+    <load module="mod_dptools"/>
+    <load module="mod_dialplan_xml"/>
+    <load module="mod_hash"/>
+    <load module="mod_db"/>
+
+    <!-- audio -->
+    <load module="mod_sndfile"/>
+    <load module="mod_native_file"/>
+    <load module="mod_tone_stream"/>
+
+    <!-- channels -->
+    <load module="mod_loopback"/>
+
+    <!-- the IVR -->
+    <load module="mod_lua"/>
+
+    <!-- SIP -->
+    <load module="mod_sofia"/>
+
+    <!-- remote control (fs_cli) -->
+    <load module="mod_event_socket"/>
+  </modules>
+</configuration>

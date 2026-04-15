@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Root FreeSWITCH config. The SignalWire bookworm package ships only the
+  binaries — every config file in this tree is hand-authored, deliberately
+  minimal, and exists only to support the retromusicbox IVR. Don't reach for
+  vanilla-style features (voicemail, conferencing, multi-tenant routing) that
+  this stack doesn't need.
+-->
+<document type="freeswitch/xml">
+  <X-PRE-PROCESS cmd="include" data="vars.xml"/>
+
+  <section name="configuration" description="Module configuration">
+    <X-PRE-PROCESS cmd="include" data="autoload_configs/*.xml"/>
+  </section>
+
+  <section name="dialplan" description="Inbound routing">
+    <X-PRE-PROCESS cmd="include" data="dialplan/*.xml"/>
+  </section>
+</document>

@@ -1,0 +1,27 @@
+# Example: pair retromusicbox-telephony with rmbd in a single compose stack.
+# Drop this into the same dir as your rmbd repo (or wire the rmbd image you use).
+services:
+  rmbd:
+    image: ghcr.io/alexkinch/retromusicbox:latest
+    container_name: rmbd
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  freeswitch:
+    build:
+      context: .
+      args:
+        SIGNALWIRE_TOKEN: ${SIGNALWIRE_TOKEN}
+    image: retromusicbox-telephony:latest
+    container_name: rmb-freeswitch
+    depends_on:
+      - rmbd
+    network_mode: host
+    environment:
+      RMBD_URL: http://localhost:8080
+      RMBD_HTTP_TIMEOUT: "15"
+      RMB_MAX_RETRIES: "3"
+    volumes:
+      - ./sounds:/var/lib/freeswitch/sounds/retromusicbox/en:ro
+    restart: unless-stopped
