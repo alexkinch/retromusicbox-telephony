@@ -76,12 +76,6 @@ local function json_string(body, key)
   return body:match('"' .. key .. '"%s*:%s*"([^"]*)"')
 end
 
-local function json_number(body, key)
-  if not body then return nil end
-  local v = body:match('"' .. key .. '"%s*:%s*(-?%d+%.?%d*)')
-  return v and tonumber(v) or nil
-end
-
 ----------------------------------------------------------------------
 -- rmbd API wrappers
 ----------------------------------------------------------------------
