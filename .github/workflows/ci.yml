@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   lint-lua:
     runs-on: ubuntu-latest
@@ -33,3 +36,47 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - name: Validate dialplan XML well-formedness
         run: find conf -name '*.xml' -print0 | xargs -0 -n1 xmllint --noout
+
+  build-image:
+    if: ${{ secrets.SIGNALWIRE_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image with BuildKit secret
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: retromusicbox-telephony:ci
+          secrets: |
+            signalwire_token=${{ secrets.SIGNALWIRE_TOKEN }}
+      - name: Start FreeSWITCH smoke container
+        run: |
+          docker run -d --name rmb-freeswitch-smoke \
+            -e RMBD_URL=http://127.0.0.1:8080 \
+            -e RMB_EXTERNAL_IP=127.0.0.1 \
+            retromusicbox-telephony:ci
+      - name: Wait for healthy container
+        run: |
+          for i in $(seq 1 20); do
+            status="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' rmb-freeswitch-smoke)"
+            if [ "$status" = "healthy" ]; then
+              exit 0
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              docker logs rmb-freeswitch-smoke
+              exit 1
+            fi
+            sleep 3
+          done
+          docker logs rmb-freeswitch-smoke
+          exit 1
+      - name: Check FreeSWITCH status
+        run: docker exec rmb-freeswitch-smoke fs_cli -x status | grep '^UP '
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs rmb-freeswitch-smoke
+      - name: Remove smoke container
+        if: always()
+        run: docker rm -f rmb-freeswitch-smoke

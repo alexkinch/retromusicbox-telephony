@@ -15,7 +15,7 @@ this stack can be swapped out by anyone wanting Asterisk, Twilio, Jambonz, etc.
 
 ```
 .
-├── Dockerfile               # FreeSWITCH 1.10 + mod_lua + mod_curl + mod_say_en
+├── Dockerfile               # FreeSWITCH 1.10 + mod_lua + mod_curl
 ├── docker-entrypoint.sh
 ├── docker-compose.yml       # standalone (host-net) for local dev
 ├── docker-compose.example.yml  # example: paired with rmbd in one stack
@@ -25,7 +25,7 @@ this stack can be swapped out by anyone wanting Asterisk, Twilio, Jambonz, etc.
 │   ├── retromusicbox.lua    # the IVR
 │   └── config.lua           # env-driven runtime config
 ├── sounds/                  # the bespoke .wav prompts (see sounds/README.md)
-└── .github/workflows/ci.yml # luacheck + xmllint
+└── .github/workflows/ci.yml # luacheck + xmllint + Docker build/smoke test
 ```
 
 ## How it talks to rmbd
@@ -74,7 +74,9 @@ session and creates a new one for the retry — that path is fine because
 ## Build
 
 You need a [SignalWire Personal Access Token](https://developer.signalwire.com/freeswitch/FreeSWITCH-Explained/Installation/HOWTO-Create-a-SignalWire-Personal-Access-Token_67240087/)
-to fetch the FreeSWITCH packages from the SignalWire Debian repo.
+to fetch the FreeSWITCH packages from the SignalWire Debian repo. The repo now
+passes that token into the Docker build as a BuildKit secret, so it is not
+baked into image metadata or echoed back as a plain build arg.
 
 ```bash
 cp .env.example .env
@@ -83,8 +85,20 @@ docker compose build
 docker compose up
 ```
 
+With modern Docker / Compose (including OrbStack), `docker compose build` uses
+BuildKit automatically and reads `SIGNALWIRE_TOKEN` from your shell or `.env`
+via the compose secret definition.
+
 That brings FreeSWITCH up listening on the external SIP profile (UDP/TCP
 **5080**) with a wide RTP port range.
+
+If you want to build the image outside Compose, use `buildx` explicitly:
+
+```bash
+docker buildx build --load \
+  --secret id=signalwire_token,env=SIGNALWIRE_TOKEN \
+  -t retromusicbox-telephony:latest .
+```
 
 ## Test it
 
@@ -107,6 +121,18 @@ Tail the container logs to watch the flow:
 ```bash
 docker compose logs -f freeswitch | grep retromusicbox
 ```
+
+## GitHub Actions
+
+The CI workflow always runs Lua linting and XML validation. It also runs a
+Docker image build plus a FreeSWITCH startup smoke test whenever the repo has a
+`SIGNALWIRE_TOKEN` GitHub Actions secret configured. That job is skipped when
+the secret is absent, which keeps forked pull requests safe by default.
+
+The bespoke prompts in `sounds/` are baked into the image at build time. The
+compose bind mount still overlays that directory for local prompt iteration, but
+the image itself is self-contained and does not depend on an external sounds
+volume to boot and answer calls.
 
 ## Configuration
 

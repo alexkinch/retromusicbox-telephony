@@ -2,8 +2,8 @@ services:
   freeswitch:
     build:
       context: .
-      args:
-        SIGNALWIRE_TOKEN: ${SIGNALWIRE_TOKEN}
+      secrets:
+        - source: signalwire_token
     image: retromusicbox-telephony:latest
     container_name: rmb-freeswitch
     # Host networking. On Linux this attaches the container directly to the
@@ -27,3 +27,7 @@ services:
     volumes:
       - ./sounds:/var/lib/freeswitch/sounds/retromusicbox/en:ro
     restart: unless-stopped
+
+secrets:
+  signalwire_token:
+    environment: SIGNALWIRE_TOKEN

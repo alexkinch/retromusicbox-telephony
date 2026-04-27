@@ -1,9 +1,9 @@
+# syntax=docker/dockerfile:1.7
 # vim:set ft=dockerfile:
 ARG DEBIAN_VERSION=bookworm
 FROM debian:${DEBIAN_VERSION}
 
 ARG DEBIAN_VERSION
-ARG SIGNALWIRE_TOKEN
 ARG FREESWITCH_UID=499
 ARG FREESWITCH_GID=499
 
@@ -37,10 +37,13 @@ RUN apt-get update -qq \
  && rm -rf /var/lib/apt/lists/*
 ENV LANG=en_US.utf8
 
-RUN wget --no-verbose --http-user=signalwire --http-password=${SIGNALWIRE_TOKEN} \
+RUN --mount=type=secret,id=signalwire_token \
+    set -eu; \
+    SIGNALWIRE_TOKEN="$(cat /run/secrets/signalwire_token)"; \
+    wget --no-verbose --http-user=signalwire --http-password="$SIGNALWIRE_TOKEN" \
       -O /usr/share/keyrings/signalwire-freeswitch-repo.gpg \
       https://freeswitch.signalwire.com/repo/deb/debian-release/signalwire-freeswitch-repo.gpg \
- && echo "machine freeswitch.signalwire.com login signalwire password ${SIGNALWIRE_TOKEN}" > /etc/apt/auth.conf \
+ && printf 'machine freeswitch.signalwire.com login signalwire password %s\n' "$SIGNALWIRE_TOKEN" > /etc/apt/auth.conf \
  && echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ ${DEBIAN_VERSION} main" > /etc/apt/sources.list.d/freeswitch.list \
  && apt-get -qq update \
  && apt-get install -y ${FS_PACKAGES} \
@@ -54,6 +57,7 @@ RUN wget --no-verbose --http-user=signalwire --http-password=${SIGNALWIRE_TOKEN}
 # in at build time; runtime config is via env vars only.
 COPY conf/ /etc/freeswitch/
 COPY scripts/ /etc/freeswitch/scripts/
+COPY sounds/ /var/lib/freeswitch/sounds/retromusicbox/en/
 
 RUN chown -R freeswitch:freeswitch /etc/freeswitch /var/lib/freeswitch /var/log/freeswitch /var/run/freeswitch 2>/dev/null || true
 

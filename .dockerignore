@@ -1,0 +1,10 @@
+.env
+.git
+.github
+.claude
+.DS_Store
+*.log
+AGENTS.md
+README.md
+docker-compose.example.yml
+docker-compose.yml
